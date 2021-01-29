@@ -5,6 +5,7 @@ G20200607011074
 https://github.com/Go-000/Go-000/issues/82
 
 > 代码测试有问题，只返回了一次就会断开，为什么？？？
+> 知道为啥了，原本的reader、writer都是在一个for循环中实现“待机”
 ```golang
 package main
 
@@ -64,15 +65,17 @@ func connReader(ctx context.Context, conn net.Conn, message chan string) {
 }
 
 func connWriter(ctx context.Context, conn net.Conn, msg chan string) {
-	writer := bufio.NewWriter(conn)
-	writer.WriteString("Response : ")
-	writer.WriteString(<-msg)
-	writer.Flush()
-	go func() {
-		<-msg
-		log.Printf("Current msg value is %s", <-msg)
-		conn.Close()
-	}()
+    for {
+	  writer := bufio.NewWriter(conn)
+	  writer.WriteString("Response : ")
+	  writer.WriteString(<-msg)
+	  writer.Flush()
+	  go func() {
+	  	<-msg
+	  	log.Printf("Current msg value is %s", <-msg)
+	  	conn.Close()
+	  }()
+    }
 }
 
 // func handleConn(conn net.Conn) {

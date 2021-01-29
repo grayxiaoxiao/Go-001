@@ -56,15 +56,17 @@ func connReader(ctx context.Context, conn net.Conn, message chan string) {
 }
 
 func connWriter(ctx context.Context, conn net.Conn, msg chan string) {
-	writer := bufio.NewWriter(conn)
-	writer.WriteString("Response : ")
-	writer.WriteString(<-msg)
-	writer.Flush()
-	go func() {
-		<-msg
-		log.Printf("Current msg value is %s", <-msg)
-		conn.Close()
-	}()
+	for {
+		writer := bufio.NewWriter(conn)
+		writer.WriteString("Response : ")
+		writer.WriteString(<-msg)
+		writer.Flush()
+		go func() {
+			<-msg
+			log.Printf("Current msg value is %s", <-msg)
+			conn.Close()
+		}()
+	}
 }
 
 // func handleConn(conn net.Conn) {
